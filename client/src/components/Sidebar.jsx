@@ -2,13 +2,16 @@ import React from 'react'
 import { assets } from '../assets/assets'
 import { Link, useNavigate } from 'react-router-dom'
 import MenuItems from './MenuItems'
-import { CirclePlus } from 'lucide-react'
+import { CirclePlus, LogOut } from 'lucide-react'
 // from ' https://clerk.com/ '
 import { UserButton, useClerk } from '@clerk/clerk-react'
 
 const Sidebar = ({ user, openSidebar, setOpenSidebar }) => {
     const navigate = useNavigate()
-    const userData = user ? user : {}
+    const userData = user ? user : {
+        full_name: 'Anonymous',
+        username: 'anonymous@gmail.com',
+    }
     // from ' https://clerk.com/ '
     const { signOut } = useClerk()
 
@@ -32,13 +35,20 @@ const Sidebar = ({ user, openSidebar, setOpenSidebar }) => {
             </div>
 
             <div className='w-full border-t border-gray-200 p-4 px-7 flex items-center justify-between'>
+
                 <div className='flex items-center gap-2 cursor-pointer'>
                     {/* // from ' https://clerk.com/ ' */}
-                    <UserButton /> 
+                    <UserButton />
                     <div>
-                        <h1></h1>
+                        <h1 className='text-sm font-medium'>{userData.full_name}</h1>
+                        <p className='text-xs text-gray-500'>@{userData.username}</p>
                     </div>
                 </div>
+
+                <LogOut
+                    className='w-4.5 text-gray-400 hover:text-gray-700 transition cursor-pointer'
+                    onClick={() => signOut()} 
+                />
             </div>
         </div>
     )
