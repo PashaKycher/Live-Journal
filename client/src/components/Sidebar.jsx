@@ -19,7 +19,6 @@ const Sidebar = ({ user, openSidebar, setOpenSidebar }) => {
         <div className={`w-60 xl:w-72 bg-white border-r border-gray-200 flex flex-col justify-between 
         items-center max-sm:absolute top-0 bottom-0 z-20 ${openSidebar ? 'translate-x-0' : 'max-sm:-translate-x-full'}
         transition duration-300 ease-in-out`}>
-
             <div className='w-full'>
                 <img src={assets.logo} alt='' className='w-26 ml-7 my-2 cursor-pointer' onClick={() => navigate('/')} />
                 <hr className='border-gray-300 mb-8' />
@@ -35,20 +34,18 @@ const Sidebar = ({ user, openSidebar, setOpenSidebar }) => {
             </div>
 
             <div className='w-full border-t border-gray-200 p-4 px-7 flex items-center justify-between'>
-
                 <div className='flex items-center gap-2 cursor-pointer'>
                     {/* // from ' https://clerk.com/ ' */}
                     <UserButton />
+
                     <div>
                         <h1 className='text-sm font-medium'>{userData.full_name}</h1>
                         <p className='text-xs text-gray-500'>@{userData.username}</p>
                     </div>
                 </div>
 
-                <LogOut
-                    className='w-4.5 text-gray-400 hover:text-gray-700 transition cursor-pointer'
-                    onClick={() => signOut()} 
-                />
+                <LogOut onClick={() => signOut()} 
+                    className='w-4.5 text-gray-400 hover:text-gray-700 transition cursor-pointer'/>
             </div>
         </div>
     )
