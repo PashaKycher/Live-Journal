@@ -11,6 +11,8 @@ import CreatePost from './pages/CreatePost'
 import Layout from './pages/Layout'
 // from ' https://clerk.com/ '
 import { useUser } from '@clerk/clerk-react'
+// from Toaster
+import { Toaster } from 'react-hot-toast'
 
 const App = () => {
   // from ' https://clerk.com/ '
@@ -18,6 +20,7 @@ const App = () => {
 
   return (
     <>
+      <Toaster />
       <Routes>
         <Route path="/" element={!user ? <Login /> : <Layout />}>
           <Route index element={<Feed />} />

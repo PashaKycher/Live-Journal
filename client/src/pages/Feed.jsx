@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { dummyPostsData } from '../assets/assets'
 import Loading from '../components/Loading'
 import StoriesBar from '../components/StoriesBar'
+import PostCard from '../components/PostCard'
 
 const Feed = () => {
   const [feeds, setFeeds] = useState([])
@@ -39,12 +40,16 @@ const Feed = () => {
 
         {/* Post  */}
         <div className='p-4 space-y-6'>
-          List of post
+          {
+            feeds[0] && feeds.map((post, index) => (
+              <PostCard key={index + post._id + 1} post={post} />
+          ))
+          }
         </div>
       </div>
 
       {/* Right sidebar  */}
-      <div>
+      <div className='hidden xl:block w-80 space-y-6'>
 
         <div>
           <h1>Sponsores</h1>
