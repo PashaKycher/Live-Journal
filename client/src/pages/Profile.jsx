@@ -5,6 +5,7 @@ import Loading from '../components/Loading'
 import UserProfileInfo from '../components/UserProfileInfo'
 import PostCard from '../components/PostCard'
 import moment from 'moment'
+import ProfileModel from '../components/ProfileModel'
 
 const Profile = () => {
   const { profileId } = useParams()
@@ -39,10 +40,10 @@ const Profile = () => {
         {/* Tabs */}
         <div className='mt-6'>
           <div className='bg-white rounded-xl shadow p-1 flex max-w-md mx-auto'>
-            {['posts', 'media', 'likes'].map((tab) => (
+            {['posts', 'media', 'likes'].map((tab, index) => (
               <button className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer
               ${activeTab === tab ? "bg-indigo-600 text-white" : "text-gray-600 hover:text-gray-900"}`}
-                key={tab}
+                key={index + 'tab'}
                 onClick={() => setActiveTab(tab)}>
                 {tab.charAt(0).toUpperCase() + tab.slice(1)}
               </button>))}
@@ -51,29 +52,30 @@ const Profile = () => {
           {/* Posts */}
           {activeTab === 'posts' && (
             <div className='mt-6 flex flex-col items-center gap-6'>
-              {posts.map((post) => <PostCard key={post.id} post={post} />)}
+              {posts.map((post) => <PostCard key={post._id} post={post} />)}
             </div>
           )}
 
           {/* Media */}
           {activeTab === 'media' && (
             <div className='flex flex-wrap mt-6 max-w-6xl'>
-              {posts.filter((post) => post.image_urls.length > 0).map((post) => (<>
+              {posts.filter((post) => post.image_urls.length > 0).map((post) => (<div key={post._id + 'postMedia'}
+              className='flex flex-wrap mt-6 max-w-6xl'>
                 {post.image_urls.map((image, index) => (<Link to={image} target='_blank' key={index}
-                className='relative group'>
-                <img src={image} alt='' className='w-64 aspect-video object-cover' key={index} />
-                <p className='absolute bottom-0 right-0 text-xs p-1 px-3 backdrop-blur-xl
-                text-white opacity-0 group-hover:opacity-100 transition duration-300'>
-                  Paster {moment(post.createdAt).fromNow()}</p>
+                  className='relative group p-2 '>
+                  <img src={image} alt='' className='w-60 aspect-video object-cover' key={index} />
+                  <p className='absolute bottom-2 right-2 text-xs p-1 px-3 backdrop-blur-xl
+                  text-white opacity-0 group-hover:opacity-100 transition duration-300'>
+                    Paster {moment(post.createdAt).fromNow()}</p>
                 </Link>))}
-              </>))}
+              </div>))}
             </div>
           )}
         </div>
       </div>
 
       {/* Edit Modal */}
-      {showEdit && <p>Edit</p>}
+      {showEdit && <ProfileModel onClose={() => setShowEdit(false)} user={user} />}
     </div>
   ) : (<Loading />)
 }
