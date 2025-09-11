@@ -10,13 +10,20 @@ import Profile from './pages/Profile'
 import CreatePost from './pages/CreatePost'
 import Layout from './pages/Layout'
 // from ' https://clerk.com/ '
-import { useUser } from '@clerk/clerk-react'
+import { useUser } from '@clerk/clerk-react' //useAuth - to get token
 // from Toaster
 import { Toaster } from 'react-hot-toast'
+// import { useEffect } from 'react'
 
 const App = () => {
   // from ' https://clerk.com/ '
   const { user } = useUser()
+  // const { getToken } = useAuth()
+  // useEffect(() => {
+  //   if(user){
+  //     getToken().then((token) => console.log('token', token))
+  //   }
+  // },[user])
 
   return (
     <>
