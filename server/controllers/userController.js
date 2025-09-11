@@ -32,6 +32,38 @@ export const getUserController = async (req, res) => {
     }
 }
 
+// find user using username, email, location, name
+export const findUserController = async (req, res) => {
+    try {
+        const { userId } = req.auth();
+        const { search } = req.body
+        function escapeRegex(str) { return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+        const safeSearch = escapeRegex(search);
+        const allUser = await User.find({
+            $or: [
+                { username: new RegExp(safeSearch, 'i') },
+                { email: new RegExp(safeSearch, 'i') },
+                { full_name: new RegExp(safeSearch, 'i') },
+                { location: new RegExp(safeSearch, 'i') }
+            ]
+        }).limit(10)
+        const filterredUsers = allUser.filter(user => user._id !== userId)
+        res.status(200).json({
+            success: true,
+            error: false,
+            user: filterredUsers,
+            message: "User found successfully"
+        })
+
+    } catch (error) {
+        res.status(501).json({
+            success: false,
+            error: true,
+            message: error.message || error
+        })
+    }
+}
+
 // update user data using userId
 export const updateUserController = async (req, res) => {
     try {
@@ -134,27 +166,19 @@ export const deleteUserController = async (req, res) => {
     }
 }
 
-// find user using username, email, location, name
-export const findUserController = async (req, res) => {
+// followers of user
+export const followersOfUserController = async (req, res) => {
     try {
+        // get from clerkMiddleware - ' https://clerk.com/ '
         const { userId } = req.auth();
-        const { search } = req.body
-        function escapeRegex(str) { return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
-        const safeSearch = escapeRegex(search);
-        const allUser = await User.find({
-            $or: [
-                { username: new RegExp(safeSearch, 'i') },
-                { email: new RegExp(safeSearch, 'i') },
-                { full_name: new RegExp(safeSearch, 'i') },
-                { location: new RegExp(safeSearch, 'i') }
-            ]
-        }).limit(10)
-        const filterredUsers = allUser.filter(user => user._id !== userId)
+
+        const user = await User.findOne({ _id: userId }).populate("followers")
+        const followers = user.followers
         res.status(200).json({
             success: true,
             error: false,
-            user: filterredUsers,
-            message: "User found successfully"
+            followers: followers,
+            message: "Get user followers successfully"
         })
 
     } catch (error) {
@@ -247,7 +271,7 @@ export const sendConnectionRequestController = async (req, res) => {
         const { id } = req.body
         // Check if user send more 20 requests per day
         const lastDay = new Date(Date.now() - 24 * 60 * 60 * 1000)
-        const requests = await ConnectionRequest.find({ user: userId, createdAt: { $gte: lastDay } })
+        const requests = await Connection.find({ user: userId, createdAt: { $gte: lastDay } })
         if (requests.length >= 20) {
             return res.status(400).json({
                 success: false,
@@ -263,7 +287,7 @@ export const sendConnectionRequestController = async (req, res) => {
             ]
         })
         if (!connection) {
-            await ConnectionRequest.create({ to_user_id: id, from_user_id: userId })
+            await Connection.create({ to_user_id: id, from_user_id: userId })
             res.status(200).json({
                 success: true,
                 error: false,
@@ -280,6 +304,70 @@ export const sendConnectionRequestController = async (req, res) => {
             success: false,
             error: true,
             message: "Connection request already sent"
+        })
+    } catch (error) {
+        res.status(501).json({
+            success: false,
+            error: true,
+            message: error.message || error
+        })
+    }
+}
+
+// accept connection request
+export const acceptConnectionRequestController = async (req, res) => {
+    try {
+        // get from clerkMiddleware - ' https://clerk.com/ '
+        const { userId } = req.auth();
+
+        const { id } = req.body
+        const connection = Connection.findOne({ to_user_id: userId, from_user_id: id })
+        if (!connection) {
+            return res.status(400).json({
+                success: false,
+                error: true,
+                message: "Connection request not found"
+            })
+        }
+        const user = await User.findOneAndUpdate({ _id: userId }, { $push: { connection: id } }, { new: true })
+        const toUser = await User.findOneAndUpdate({ _id: id }, { $push: { connection: userId } }, { new: true })
+        connection.status = "accepted"
+        await connection.save()
+        res.status(200).json({
+            success: true,
+            error: false,
+            message: "Connection request accepted successfully"
+        })
+    } catch (error) {
+        res.status(501).json({
+            success: false,
+            error: true,
+            message: error.message || error
+        })
+    }
+}
+
+// get user connection
+export const getUserConnectionController = async (req, res) => {
+    try {
+        // get from clerkMiddleware - ' https://clerk.com/ '
+        const { userId } = req.auth();
+
+        const user = await User.findById(userId).populate('connection followers following')
+        const connection = user.connection
+        const followers = user.followers
+        const following = user.following
+
+        const pendingConnection = await Connection.find({ to_user_id: userId, status: "pending" }).populate('from_user_id')
+        const pendingConnectionList = pendingConnection.map(connection => connection.from_user_id)
+        res.status(200).json({
+            success: true,
+            error: false,
+            message: "User connection found successfully",
+            connection,
+            followers,
+            following,
+            pendingConnectionList
         })
     } catch (error) {
         res.status(501).json({

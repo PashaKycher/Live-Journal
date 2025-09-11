@@ -1,5 +1,7 @@
 import { Inngest } from "inngest";
 import User from "../models/User.js";
+import Connection from "../models/Connection.js";
+import sendEmail from "../configs/nodeMailer.js";
 
 // Create a client to send and receive events
 export const inngest = new Inngest({ id: "livejournal-app" });
@@ -56,9 +58,50 @@ const syncUserDeletion = inngest.createFunction(
     }
 )
 
+// Inngest Functions to send email when a new connection request is sent
+const sendNewConnectionRequest = inngest.createFunction(
+    { id: 'send-new-connection-request' },
+    { event: 'app/connection-request' },
+    async ({ event, step }) => {
+        const {connectionId} = event.data
+        await step.run('send-new-connection-request-mail', async ({ send }) => {
+            const connection = await Connection.findById(connectionId).populate('from_user_id to_user_id')
+            const subject = `👋 New connection request from ${connection.from_user_id.full_name}`
+            const body = `
+            <div style="font-family: Arial, sans-serif; padding: 20px;">
+                <h2 style="color: #333; margin-bottom: 20px;">
+                    👋 New connection request from ${connection.from_user_id.full_name}
+                </h2>
+                <p style="color: #666; margin-bottom: 20px;">
+                    Hello ${connection.to_user_id.full_name},
+                </p>
+                <p style="color: #666; margin-bottom: 20px;">
+                    ${connection.from_user_id.full_name} has sent you a connection request.
+                </p>
+                <p style="color: #666; margin-bottom: 20px;">
+                    You can accept or reject the request by visiting the following link:
+                </p>
+                <a href="${process.env.FRONTEND_URL}" style="color: #007BFF; text-decoration: none;">
+                    here in LiveJournal
+                </a>
+                <p style="color: #666; margin-bottom: 20px;">
+                    Thank you for using LiveJournal!
+                </p>
+            </div>
+            `
+            await sendEmail({
+                from: connection.from_user_id.email,
+                to: connection.to_user_id.email,
+                subject,
+                body,
+            })
+        })
+    }
+)
 // Create an empty array where we'll export future Inngest functions
 export const functions = [
     syncUserCreation,
     syncUserUpdation,
-    syncUserDeletion
+    syncUserDeletion,
+    sendNewConnectionRequest
 ];
