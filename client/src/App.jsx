@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import Login from './pages/Login'
 import Feed from './pages/Feed'
@@ -10,20 +10,27 @@ import Profile from './pages/Profile'
 import CreatePost from './pages/CreatePost'
 import Layout from './pages/Layout'
 // from ' https://clerk.com/ '
-import { useUser } from '@clerk/clerk-react' //useAuth - to get token
-// from Toaster
+import { useUser, useAuth } from '@clerk/clerk-react' //useAuth - to get token
 import { Toaster } from 'react-hot-toast'
-// import { useEffect } from 'react'
+import { useEffect } from 'react'
+import { useDispatch } from 'react-redux'
+import { fetchUser } from './features/userSlice'
 
 const App = () => {
   // from ' https://clerk.com/ '
   const { user } = useUser()
-  // const { getToken } = useAuth()
-  // useEffect(() => {
-  //   if(user){
-  //     getToken().then((token) => console.log('token', token))
-  //   }
-  // },[user])
+  const { getToken } = useAuth()
+  const dispatch = useDispatch()
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (user) {
+        const token = await getToken()
+        dispatch(fetchUser(token))
+      }
+    }
+    fetchData()
+  }, [user, getToken, dispatch])
 
   return (
     <>
