@@ -2,6 +2,9 @@ import User from "../models/User.js";
 import fs from 'fs'
 import imagekit from "../configs/imageKit.js";
 import Connection from "../models/Connection.js";
+import Post from "../models/Post.js";
+import Story from "../models/Story.js";
+import { inngest } from "../inngest/index.js";
 
 // get user data using userId
 export const getUserController = async (req, res) => {
@@ -287,7 +290,13 @@ export const sendConnectionRequestController = async (req, res) => {
             ]
         })
         if (!connection) {
-            await Connection.create({ to_user_id: id, from_user_id: userId })
+            const newConnection = await Connection.create({ to_user_id: id, from_user_id: userId })
+
+            await inngest.send({
+                name:'app/connection.request',
+                data:{ connectionId: newConnection._id }
+            })
+            
             res.status(200).json({
                 success: true,
                 error: false,
@@ -368,6 +377,41 @@ export const getUserConnectionController = async (req, res) => {
             followers,
             following,
             pendingConnectionList
+        })
+    } catch (error) {
+        res.status(501).json({
+            success: false,
+            error: true,
+            message: error.message || error
+        })
+    }
+}
+
+// get user profile
+export const getUserProfileController = async (req, res) => {
+    try {
+        // get from clerkMiddleware - ' https://clerk.com/ '
+        const { userId } = req.auth();
+
+        const { profileId } = req.body
+        const profile = await User.findById(profileId)
+        if (!profile) {
+            return res.status(400).json({
+                success: false,
+                error: true,
+                message: "User profile not found"
+            })
+        }
+        const posts = await Post.find({ user: profileId }).populate("user").sort({ createdAt: -1 })
+        const storys = await Story.find({ user: profileId }).populate("user").sort({ createdAt: -1 })
+
+        res.status(200).json({
+            success: true,
+            error: false,
+            message: "User profile found successfully",
+            posts,
+            profile,
+            storys
         })
     } catch (error) {
         res.status(501).json({
