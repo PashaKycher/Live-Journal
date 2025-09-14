@@ -78,7 +78,7 @@ export const likePostController = async (req, res) => {
         const { userId } = req.auth();
 
         const { postId } = req.body
-        const post = await Post.findById({ postId })
+        const post = await Post.findOne({ _id: postId })
         if (post.likes_count.includes(userId)) {
             post.likes_count = post.likes_count.filter(user => user !== userId)
             await post.save()
@@ -93,7 +93,8 @@ export const likePostController = async (req, res) => {
             return res.status(200).json({
                 success: true,
                 error: false,
-                message: "Post liked successfully"
+                message: "Post liked successfully",
+                likes_count: post.likes_count
             })
         }
     } catch (error) {

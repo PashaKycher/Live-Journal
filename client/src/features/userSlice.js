@@ -20,7 +20,7 @@ export const updateUser  = createAsyncThunk('user/updateUser', async ({userData,
         return null
     }
 })
-export const deleteUser  = createAsyncThunk('user/updateUser', async (token) => {
+export const deleteUser  = createAsyncThunk('user/deleteUser', async (token) => {
     const {data} = await api.delete('/api/user/delete-user', {headers: {Authorization: `Bearer ${token}`}})
     if (data.success) {
         toast.success(data.message)

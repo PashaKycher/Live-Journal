@@ -5,9 +5,11 @@ import MenuItems from './MenuItems'
 import { CirclePlus, LogOut } from 'lucide-react'
 // from ' https://clerk.com/ '
 import { UserButton, useClerk } from '@clerk/clerk-react'
+import { useSelector } from 'react-redux'
 
-const Sidebar = ({ user, openSidebar, setOpenSidebar }) => {
+const Sidebar = ({ openSidebar, setOpenSidebar }) => {
     const navigate = useNavigate()
+    const user = useSelector(state => state.user.value)
     const userData = user ? user : {
         full_name: 'Anonymous',
         username: 'anonymous@gmail.com',

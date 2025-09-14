@@ -2,16 +2,48 @@ import React, { useState } from 'react'
 import { dummyUserData } from '../assets/assets'
 import { Image, X } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { useSelector } from 'react-redux'
+import { useAuth } from '@clerk/clerk-react'
+import { useNavigate } from 'react-router-dom'
+import api from '../api/axios'
 
 const CreatePost = () => {
+  const { getToken } = useAuth()
+  const navigate = useNavigate()
   const [content, setContent] = useState('')
   const [images, setImages] = useState([])
   const [loading, setLoading] = useState(false)
 
-  const user = dummyUserData
+  const user = useSelector(state => state.user.value)
 
-  const handleSubmit = async() => {
-
+  const handleSubmit = async () => {
+    if (!images.length && !content) {
+      return toast.error('Please enter some text or upload an image')
+    }
+    setLoading(true)
+    const postType = images.length && content ? 'text_with_image' : images.length ? 'image' : 'text'
+    try {
+      const formData = new FormData()
+      formData.append('content', content)
+      formData.append('post_type', postType)
+      images.map((image) => { formData.append('images', image) })
+      const token = await getToken()
+      const { data } = await api.post('/api/post/add-post', formData, { headers: { Authorization: `Bearer ${token}` } })
+      if (data.success) {
+        toast.success(data.message)
+        navigate('/')
+        setContent('')
+        setImages([])
+        setLoading(false)
+      } else {
+        toast.error(data.message)
+        setLoading(false)
+      }
+    } catch (error) {
+      toast.error(error.message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -27,7 +59,7 @@ const CreatePost = () => {
         <div className='max-w-xl bg-white p-4 sm:p-8 sm:pb-3 rounded-xl shadow-md space-y-4'>
           {/* Header */}
           <div className='flex items-center gap-3'>
-            <img src={user.profile_picture} alt="" className='w-12 h-12 rounded-full shadow' />
+            <img src={user.profile_picture} alt="" className='w-12 h-12 rounded-full shadow object-cover' />
             <div>
               <h2 className='font-semibold'>{user.full_name}</h2>
               <p className='text-sm text-gray-500'>@{user.username}</p>
@@ -64,12 +96,12 @@ const CreatePost = () => {
             <button className='text-sm bg-gradient-to-r from-indigo-500 to-purple-600 px-8 py-2
             hover:from-indigo-600 hover:to-purple-700 text-white font font-medium rounded-md cursor-pointer
             disabled:opacity-50 disabled:cursor-not-allowed'
-            disabled={loading || (content.trim() === '' && images.length === 0)} 
-            onClick={() => toast.promise(handleSubmit(), {
-              loading: 'Publishing...',
-              success: <p>Post published!</p>,
-              error: <p>Error publishing post</p>
-            })}>
+              disabled={loading || (content.trim() === '' && images.length === 0)}
+              onClick={() => toast.promise(handleSubmit(), {
+                loading: 'Publishing...',
+                success: <p>Post published!</p>,
+                error: <p>Error publishing post</p>
+              })}>
               Publish Post
             </button>
           </div>

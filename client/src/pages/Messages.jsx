@@ -20,7 +20,7 @@ const Messages = () => {
           {
             dummyConnectionsData[0] ? dummyConnectionsData.map((user, index) => (
               <div key={index + user._id} className='max-w-xl flex flex-warp gap-5 p-6 bg-white shadow rounded-md'>
-                <img src={user.profile_picture} alt="" className='rounded-full size-12 mx-auto'/>
+                <img src={user.profile_picture} alt="" className='rounded-full size-12 mx-auto object-cover'/>
 
                 <div className='flex-1'>
                   <p className='font-medium text-slate-700'>{user.full_name}</p>

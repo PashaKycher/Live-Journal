@@ -4,20 +4,20 @@ import Loading from '../components/Loading'
 import StoriesBar from '../components/StoriesBar'
 import PostCard from '../components/PostCard'
 import RecendMessages from '../components/RecendMessages'
+import { useAuth } from '@clerk/clerk-react'
+import api from '../api/axios'
 
 const Feed = () => {
   const [feeds, setFeeds] = useState([])
   const [loading, setLoading] = useState(false)
+  const {getToken} = useAuth()
 
   const feathFeeds = async () => {
-
     try {
       setLoading(true)
-      // when we create backend we will chenge this
-      const data = await dummyPostsData
-      setFeeds(data) // most by from backend
-      // -----------------------------------------
-      setLoading(false)
+      const token = await getToken()
+      const {data} = await api.get('/api/post/get-post', { headers: { Authorization: `Bearer ${token}` } })
+      setFeeds(data.posts)
     } catch (error) {
       console.log(error)
     } finally {

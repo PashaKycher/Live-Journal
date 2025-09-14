@@ -1,9 +1,15 @@
 import React, { useState } from 'react'
 import { dummyUserData } from '../assets/assets'
 import { Pencil, X } from 'lucide-react'
+import { useDispatch, useSelector } from 'react-redux'
+import toast from 'react-hot-toast'
+import { updateUser } from '../features/userSlice'
+import { useAuth } from '@clerk/clerk-react'
 
 const ProfileModel = ({ onClose }) => {
-    const user = dummyUserData
+    const dispatch = useDispatch()
+    const {getToken} = useAuth()
+    const user = useSelector(state => state.user.value)
     const [editForm, setEditForm] = useState({
         full_name: user.full_name,
         username: user.username,
@@ -19,6 +25,23 @@ const ProfileModel = ({ onClose }) => {
 
     const handleSaveProfile = async (e) => {
         e.preventDefault()
+        try {
+            const token = await getToken()
+
+            const userData = new FormData()
+            const { full_name, username, bio, location, profile_picture, cover_photo } = editForm
+            userData.append('full_name', full_name)
+            userData.append('username', username)
+            userData.append('bio', bio)
+            userData.append('location', location)
+            profile_picture && userData.append('profile', profile_picture)
+            cover_photo && userData.append('cover', cover_photo)
+
+            dispatch(updateUser({userData, token}))
+            onClose()
+        } catch (error) {
+            toast.error(error.message)
+        }
     }
 
     return (
@@ -30,7 +53,7 @@ const ProfileModel = ({ onClose }) => {
                         <X onClick={onClose} className='w-6 h-6 text-gray-600 cursor-pointer hover:text-gray-900' />
                     </div>
 
-                    <form className='space-y-4' onSubmit={handleSaveProfile}>
+                    <form className='space-y-4' onSubmit={e => toast.promise(handleSaveProfile(e), {loading: 'Updating...'})}>
                         {/* Profile Picture */}
                         <div className='flex flex-col items-start gap-3'>
                             <label htmlFor="profile_picture" className='block text-sm font-medium text-gray-700 mb-1'>

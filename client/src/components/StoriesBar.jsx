@@ -4,18 +4,20 @@ import { Plus } from 'lucide-react'
 import moment from 'moment'
 import StoryModel from './StoryModel'
 import StoryViewer from './StoryViewer'
+import api from '../api/axios'  
+import { useAuth } from '@clerk/clerk-react'
 
 const StoriesBar = () => {
+    const {getToken} = useAuth()
     const [stories, setStories] = useState([])
     const [showModel, setShowModel] = useState(false)
     const [viewStory, setViewStory] = useState(null)
 
     const fetchStories = async () => {
         try {
-            // when we create backend we will chenge this
-            const data = await dummyStoriesData
-            setStories(data) // most by from backend
-            // -----------------------------------------
+            const token = await getToken()
+            const { data } = await api.get('/api/story/get-story', { headers: { Authorization: `Bearer ${token}` } })
+            setStories(data.stories)
         } catch (error) {
             console.log(error)
         }
@@ -23,7 +25,7 @@ const StoriesBar = () => {
 
     useEffect(() => {
         fetchStories()
-    }, [])
+    }, [showModel])
 
     return (
         <div className='w-screen sm:w-[calc(100vw-240px)] lg:max-w-2xl no-scrollbar overflow-x-auto px-4'>
@@ -51,7 +53,7 @@ const StoriesBar = () => {
                             <img
                                 src={story?.user?.profile_picture}
                                 alt="Why"
-                                className='absolute size-8 top-3 left-3 rounded-full ring ring-gray-100 shadow z-10'
+                                className='absolute size-8 top-3 left-3 rounded-full ring ring-gray-100 shadow z-10 object-cover'
                             />
                             {/* Content */}
                             <p className='absolute top-18 left-3 text-white/60 text-sm truncate max-w-24'>

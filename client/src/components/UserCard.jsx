@@ -1,9 +1,10 @@
 import React from 'react'
 import { dummyUserData } from '../assets/assets'
 import { MapPin, MessageCircle, Plus, UserPlus } from 'lucide-react'
+import { useSelector } from 'react-redux'
 
 const UserCard = ({ user }) => {
-    const currentUser = dummyUserData
+    const currentUser = useSelector(state => state.user.value)
 
     const handleFollow = async () => {
         // Implement follow functionality here
@@ -16,7 +17,7 @@ const UserCard = ({ user }) => {
     return (
         <div key={user._id + 'UserCard'} className='p-4 pt-6 flex flex-col justify-between w-72 shadow border border-gray-200 rounded-md'>
             <div className='text-center'>
-                <img src={user.profile_picture} alt='' className='rounded-full w-16 shadow-md mx-auto' />
+                <img src={user.profile_picture} alt='' className='rounded-full w-16 shadow-md mx-auto object-cover' />
                 <p className='mt-4 font-semibold'>{user.full_name}</p>
                 {user.username && <p className='text-gray-500 font-light'>@{user.username}</p>}
                 {user.bio && <p className='text-grey-600 mt-2 text-center text-sm px-4'>{user.bio}</p>}
@@ -36,15 +37,15 @@ const UserCard = ({ user }) => {
                 <button className='w-full py-2 rounded-md flex justify-center items-center gap-2 bg-gradient-to-r
                 from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white 
                 active:scale-95 transition cursor-pointer'
-                disabled={currentUser?.following.includes(user._id)}
+                disabled={currentUser?.following?.includes(user._id)}
                 onClick={handleFollow}>
-                    <UserPlus className='w-4 h-4' />{currentUser?.following.includes(user._id) ? 'Following' : 'Follow'}
+                    <UserPlus className='w-4 h-4' />{currentUser?.following?.includes(user._id) ? 'Following' : 'Follow'}
                 </button>
                 {/* Connect button */}
                 <button className='flex items-center justify-center w-16 border text-slate-500 group rounded-md
                 cursor-pointer active:scale-95 transition'
                 onClick={handleConnectionRequest}>
-                    {currentUser?.connections.includes(user._id) ? (
+                    {currentUser?.connections?.includes(user._id) ? (
                         <MessageCircle className='w-5 h-5 group-hover:scale-105 transition' />
                     ) : (
                         <Plus className='w-5 h-5 group-hover:scale-105 transition' />)}
