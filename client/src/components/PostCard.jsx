@@ -60,14 +60,14 @@ const PostCard = ({ post }) => {
                     className={`w-4 h-4 cursor-pointer ${likes?.includes(currentUser._id) && 'text-red-500 fill-red-500'}`} />
                     <span>{likes?.length ? likes.length : 0}</span>
                 </div>
-                <div className='flex items-center gap-1'>
+                {/* <div className='flex items-center gap-1'>
                     <MessageCircle className='w-4 h-4 cursor-pointer' />
                     <span>{12}</span>
                 </div>
                 <div className='flex items-center gap-1'>
                     <Share2 className='w-4 h-4 cursor-pointer' />
                     <span>{7}</span>
-                </div>
+                </div> */}
             </div>
         </div>
     )

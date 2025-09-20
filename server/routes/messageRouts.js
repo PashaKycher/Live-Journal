@@ -6,7 +6,7 @@ import { sseController, sendMessageController, getChatMessagesController } from 
 const messageRouter = express.Router();
 
 messageRouter.get('/:userId', sseController)
-messageRouter.post('/send-message', upload.single('image'), protect, sendMessageController)
+messageRouter.post('/send-message', upload.array('image', 10), protect, sendMessageController)
 messageRouter.post('/get-chat-messages', protect, getChatMessagesController)
 
 export default messageRouter

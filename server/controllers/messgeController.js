@@ -38,26 +38,31 @@ export const sendMessageController = async (req, res) => {
         const { userId } = req.auth();
 
         const { to_user_id, text } = req.body
-        const image = req.files
-        let media_url = "";
+        const image = req.files[0]
+        const images = req.files
+        let media_url = []
         let message_type = image ? "image" : "text";
         if (message_type === "image") {
-            const buffer = fs.readFileSync(image.path)
-            const response = await imagekit.upload({
-                file: buffer,
-                fileName: image.originalname,
-                folder: "messages"
-            })
-            media_url = imagekit.url({
-                path: response.filePath,
-                transformation: [
-                    { quality: 'auto' },
-                    { format: 'webp' },
-                    { width: '1280' }
-                ]
-            })
+            media_url = await Promise.all(
+                images.map(async (image) => {
+                    const fileBuffer = fs.readFileSync(image.path)
+                    const response = await imagekit.upload({
+                        file: fileBuffer,
+                        fileName: image.originalname,
+                        folder: "messages"
+                    })
+                    const url = imagekit.url({
+                        path: response.filePath,
+                        transformation: [
+                            { quality: 'auto' },
+                            { format: 'webp' },
+                            { width: '1280' }
+                        ]
+                    })
+                    return url
+                }))
         }
-        const message = await Message.create({
+        const messages = await Message.create({
             from_user_id: userId,
             to_user_id,
             text,
@@ -68,12 +73,12 @@ export const sendMessageController = async (req, res) => {
             success: true,
             error: false,
             message: "Message sent successfully",
-            message
+            messages
         })
         // Send message to to_user_id using SSE
-        const messageWithUserData = await Message.findOne({ _id: message._id }).populate("from_user_id")
+        const messageWithUserData = await Message.findOne({ _id: messages._id }).populate("from_user_id")
         if (connections[to_user_id]) {
-            connections[to_user_id].write(`Data: ${JSON.stringify(messageWithUserData)}\n\n`);
+            connections[to_user_id].write(`data: ${JSON.stringify(messageWithUserData)}\n\n`);
         }
     } catch (error) {
         res.status(501).json({
@@ -91,13 +96,14 @@ export const getChatMessagesController = async (req, res) => {
         const { userId } = req.auth();
 
         const { to_user_id } = req.body;
-        const messages = await Message.find({ 
+        const messages = await Message.find({
             $or: [
-                { from_user_id: userId, to_user_id: to_user_id }, 
+                { from_user_id: userId, to_user_id: to_user_id },
                 { from_user_id: to_user_id, to_user_id: userId }
-            ] }).sort({ createdAt: -1 })
-            // mark messages as seen
-            await Message.updateMany({from_user_id: to_user_id, to_user_id: userId}, { seen: true })
+            ]
+        })
+        // mark messages as seen
+        await Message.updateMany({ from_user_id: to_user_id, to_user_id: userId }, { seen: true })
         res.status(200).json({
             success: true,
             error: false,

@@ -1,17 +1,49 @@
 import React from 'react'
 import { dummyUserData } from '../assets/assets'
 import { MapPin, MessageCircle, Plus, UserPlus } from 'lucide-react'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
+import { useAuth } from '@clerk/clerk-react'
+import { useNavigate } from 'react-router-dom'
+import toast from 'react-hot-toast'
+import { fetchUser } from '../features/userSlice'
+import api from '../api/axios'
 
 const UserCard = ({ user }) => {
+    const {getToken} = useAuth()
+    const dispatch = useDispatch()
+    const navigate = useNavigate()
     const currentUser = useSelector(state => state.user.value)
 
     const handleFollow = async () => {
-        // Implement follow functionality here
+        try {
+            const token = await getToken()
+            const {data} = await api.post('/api/user/follow-user', {id: user._id}, {headers: {Authorization: `Bearer ${token}`}})
+            if (data.success) {
+                toast.success(data.message)
+                dispatch(fetchUser(token))
+            } else {
+                toast.error(data.message)
+            }
+        } catch (error) {
+            toast.error(error.message)
+        }
     }
 
     const handleConnectionRequest = async () => {
-        // Implement connection request functionality here
+        if (currentUser.connection.includes(user._id)) {
+            return navigate('/messages/' + user._id)
+        }
+        try {
+            const token = await getToken()
+            const {data} = await api.post('/api/user/send-connection-request', {id: user._id}, {headers: {Authorization: `Bearer ${token}`}})
+            if (data.success) {
+                toast.success(data.message)
+            } else {
+                toast.error(data.message)
+            }
+        } catch (error) {
+            toast.error(error.message)
+        }
     }
 
     return (
@@ -45,7 +77,7 @@ const UserCard = ({ user }) => {
                 <button className='flex items-center justify-center w-16 border text-slate-500 group rounded-md
                 cursor-pointer active:scale-95 transition'
                 onClick={handleConnectionRequest}>
-                    {currentUser?.connections?.includes(user._id) ? (
+                    {currentUser.connection.includes(user._id) ? (
                         <MessageCircle className='w-5 h-5 group-hover:scale-105 transition' />
                     ) : (
                         <Plus className='w-5 h-5 group-hover:scale-105 transition' />)}

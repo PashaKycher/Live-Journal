@@ -340,8 +340,7 @@ export const acceptConnectionRequestController = async (req, res) => {
         }
         const user = await User.findOneAndUpdate({ _id: userId }, { $push: { connection: id } }, { new: true })
         const toUser = await User.findOneAndUpdate({ _id: id }, { $push: { connection: userId } }, { new: true })
-        connection.status = "accepted"
-        await connection.save()
+        const updateConection = await Connection.findOneAndUpdate({ to_user_id: userId, from_user_id: id }, { status: "accepted" }, { new: true })
         res.status(200).json({
             success: true,
             error: false,

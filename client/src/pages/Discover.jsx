@@ -22,12 +22,14 @@ const Discover = () => {
         setUsers([])
         setLoading(true)
         const token = await getToken()
-        const { data } = await api.get('/api/user/find-user', { input }, { headers: { Authorization: `Bearer ${token}` } })
+        const { data } = await api.post('/api/user/find-user', { search: input }, { headers: { Authorization: `Bearer ${token}` } })
         if (data.success) {
-          setUsers(data.users)
+          setUsers(data.user)
         } else {
           toast.error(data.message)
         }
+        setInput('')
+        setLoading(false)
       } catch (error) {
         toast.error(error.message)
       } finally {
